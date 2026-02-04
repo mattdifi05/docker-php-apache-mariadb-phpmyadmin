@@ -1,0 +1,56 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: infrastructure/php-apache/Dockerfile
+    container_name: php-apache
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../src:/var/www/html
+      - ./php-apache/php/custom.ini:/usr/local/etc/php/conf.d/zz-custom.ini:ro
+      - ./php-apache/apache:/etc/apache2/sites-available
+      - ./certs:/etc/apache2/certs:ro
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      phpmyadmin:
+        condition: service_started
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./mariadb/initdb:/docker-entrypoint-initdb.d:ro
+      - ./mariadb/conf.d:/etc/mysql/conf.d:ro
+      - ./certs:/etc/mysql/ssl:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -proot --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mariadb
+      PMA_PORT: 3306
+      PMA_ABSOLUTE_URI: https://localhost/phpmyadmin/
+      # TLS verso MariaDB usando CA mkcert
+      PMA_SSL_CA: /etc/phpmyadmin/certs/ca.pem
+      PMA_SSL_VERIFIES: "1"
+      UPLOAD_LIMIT: 256M
+    volumes:
+      - ./phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php:ro
+      - ./certs:/etc/phpmyadmin/certs:ro
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+volumes:
+  mariadb_data:
