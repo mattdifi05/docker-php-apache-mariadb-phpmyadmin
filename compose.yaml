@@ -40,7 +40,6 @@ services:
     environment:
       PMA_HOST: mariadb
       PMA_PORT: 3306
-      PMA_ABSOLUTE_URI: https://localhost/phpmyadmin/
       # TLS verso MariaDB usando CA mkcert
       PMA_SSL_CA: /etc/phpmyadmin/certs/ca.pem
       PMA_SSL_VERIFIES: "1"

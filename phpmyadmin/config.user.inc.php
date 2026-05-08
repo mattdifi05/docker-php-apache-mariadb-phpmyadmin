@@ -1,6 +1,17 @@
 <?php
 $i = 1;
 
+$scheme = 'http';
+
+if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+    $scheme = (string) $_SERVER['HTTP_X_FORWARDED_PROTO'];
+} elseif (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+    $scheme = 'https';
+}
+
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$cfg['PmaAbsoluteUri'] = sprintf('%s://%s/phpmyadmin/', $scheme, $host);
+
 /* Server */
 $cfg['Servers'][$i]['host'] = 'mariadb';
 $cfg['Servers'][$i]['port'] = 3306;

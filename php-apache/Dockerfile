@@ -59,7 +59,10 @@ RUN install-php-extensions imagick
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 RUN composer --version
 
-# Enable SSL site, disable plain HTTP site (redirect handled in :80 vhost)
-RUN a2ensite default-ssl && a2dissite 000-default
+# Enable HTTPS site and plain HTTP redirect site
+RUN a2ensite 000-default default-ssl
+
+COPY infrastructure/php-apache/apache/zz-server-hardening.conf /etc/apache2/conf-available/zz-server-hardening.conf
+RUN a2enconf zz-server-hardening
 
 WORKDIR /var/www/html
